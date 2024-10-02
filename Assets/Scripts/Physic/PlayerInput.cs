@@ -22,6 +22,7 @@ public class PlayerInput : MonoBehaviour
         if (Input.GetKeyUp(KeyCode.Space))
             player.OnJumpInputUp();
 
-
+        if (Input.GetKeyDown(KeyCode.C))
+            player.OnDashInputDown();
     }
 }

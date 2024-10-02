@@ -1563,10 +1563,13 @@ MonoBehaviour:
   wallJumpOff: {x: 13, y: 7}
   wallLeap: {x: 18, y: 17}
   wallSlideSpeedMax: 3
-  wallStickTime: 0.25
+  wallStickTime: 0.1
   coyoteTime: 0.2
   jumpBufferTime: 0.2
   jumpCooldown: 0.4
+  dashVelocity: 15
+  dashTime: 0.2
+  dashCooldown: 0.5
 --- !u!114 &2122089472
 MonoBehaviour:
   m_ObjectHideFlags: 0

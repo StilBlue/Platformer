@@ -21,21 +21,26 @@ public class Player : MonoBehaviour
 
     [SerializeField] float wallSlideSpeedMax = 3;
     [SerializeField] float wallStickTime = 0.25f;
-    float timeToWallUnstick;
 
     [SerializeField] float coyoteTime = 0.5f;
-    float coyoteTimer;
 
     [SerializeField] float jumpBufferTime = 0.5f;
-    float jumpBufferTimer;
-
     [SerializeField] float jumpCooldown;
+
+    [SerializeField] float dashVelocity = 3f;
+    [SerializeField] float dashTime = 0.1f;
+    [SerializeField] float dashCooldown = 0.5f;
 
     float gravity;
     float maxJumpVelocity;
     float minJumpVelocity;
     float velocityXSmoothing;
     Vector3 velocity;
+    float timeToWallUnstick;
+    float coyoteTimer;
+    float jumpBufferTimer;
+    bool isDashing;
+    bool isDashOnCooldown;
 
     Controller2D controller2D;
     Vector2 directionalInput;
@@ -65,9 +70,14 @@ public class Player : MonoBehaviour
     {
         CalculateVelocity();
         HandleWallSliding();
+        HandleCoyote();
+        HandleBuffer();
 
-        if (jumpBufferTimer > 0f)
-            jumpBufferTimer -= Time.deltaTime;
+        if (coyoteTimer > 0f && jumpBufferTimer > 0f && !isJumped)
+        {
+            Jump();
+            jumpBufferTimer = 0f;
+        }
 
         controller2D.Move(velocity * Time.deltaTime, directionalInput);
 
@@ -78,16 +88,26 @@ public class Player : MonoBehaviour
             else
                 velocity.y = 0;
         }
-
+    }
+    void HandleBuffer()
+    {
+        if (jumpBufferTimer > 0f)
+            jumpBufferTimer -= Time.deltaTime;
+    }
+    void HandleCoyote()
+    {
         if (controller2D.collisions.below)
             coyoteTimer = coyoteTime;
         else
             coyoteTimer -= Time.deltaTime;
+    }
 
-        if (coyoteTimer > 0f && jumpBufferTimer > 0f && !isJumped)
+    void HandleDashing()
+    {
+        if (isDashing)
         {
-            Jump();
-            jumpBufferTimer = 0f;
+            velocity.x = dashVelocity * controller2D.collisions.faceDir;
+            velocity.y = 0;
         }
     }
 
@@ -162,6 +182,28 @@ public class Player : MonoBehaviour
         if (velocity.y > minJumpVelocity)
             velocity.y = minJumpVelocity;
     }
+
+    public void OnDashInputDown()
+    {
+        if (isDashOnCooldown)
+            return;
+
+        isDashOnCooldown = true;
+        isDashing = true;
+
+        Invoke(nameof(ResetDashing), dashTime);
+        Invoke(nameof(ResetDashCooldown), dashCooldown);
+    }
+
+    void ResetDashing()
+    {
+        isDashing = false;
+    }
+    void ResetDashCooldown()
+    {
+        isDashOnCooldown = false;
+    }
+
     void HandleWallSliding()
     {
         wallDirX = controller2D.collisions.left ? -1 : 1;
