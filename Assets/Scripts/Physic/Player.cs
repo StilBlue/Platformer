@@ -30,6 +30,7 @@ public class Player : MonoBehaviour
     [SerializeField] float dashVelocity = 3f;
     [SerializeField] float dashTime = 0.1f;
     [SerializeField] float dashCooldown = 0.5f;
+    [SerializeField] bool canDoubleJump;
 
     float gravity;
     float maxJumpVelocity;
@@ -41,6 +42,7 @@ public class Player : MonoBehaviour
     float jumpBufferTimer;
     bool isDashing;
     bool isDashOnCooldown;
+    int dashDirection;
 
     Controller2D controller2D;
     Vector2 directionalInput;
@@ -72,6 +74,8 @@ public class Player : MonoBehaviour
         HandleWallSliding();
         HandleCoyote();
         HandleBuffer();
+        HandleDashing();
+
 
         if (coyoteTimer > 0f && jumpBufferTimer > 0f && !isJumped)
         {
@@ -80,6 +84,9 @@ public class Player : MonoBehaviour
         }
 
         controller2D.Move(velocity * Time.deltaTime, directionalInput);
+
+        if (controller2D.collisions.below)
+            canDoubleJump = false;
 
         if (controller2D.collisions.above || controller2D.collisions.below)
         {
@@ -106,7 +113,7 @@ public class Player : MonoBehaviour
     {
         if (isDashing)
         {
-            velocity.x = dashVelocity * controller2D.collisions.faceDir;
+            velocity.x = dashVelocity * dashDirection;
             velocity.y = 0;
         }
     }
@@ -133,6 +140,7 @@ public class Player : MonoBehaviour
     {
         velocity.y = maxJumpVelocity;
         isJumped = true;
+        canDoubleJump = true;
         Invoke(nameof(ResetJump), jumpCooldown);
     }
 
@@ -169,6 +177,11 @@ public class Player : MonoBehaviour
                 velocity.y = wallLeap.y;
             }
         }
+        if (canDoubleJump)
+        {
+            Jump();
+            canDoubleJump = false;
+        }
 
         if (controller2D.collisions.below)
         {
@@ -188,6 +201,10 @@ public class Player : MonoBehaviour
         if (isDashOnCooldown)
             return;
 
+        if (directionalInput.x == 0)
+            dashDirection = controller2D.collisions.faceDir;
+        else
+            dashDirection = (int)Mathf.Sign(directionalInput.x);
         isDashOnCooldown = true;
         isDashing = true;
 
